@@ -1,0 +1,21 @@
+Computer Graphics Final Project Features
+========================================
+BASIC COMPONENTS
+read and draw map
+move camera side ways
+tilt camera up and down
+move character on map - cannot go through tiles.
+
+Timer
+Pits
+Create map based on arrays
+Layered Background
+Acceleration in movement (sideways and jumps)
+Point system
+Character animation
+sound effects
+moving camera (shift map if character is beyond threshold)
+tilt camera up if character is too high up
+Screen effects (black fade in if dead)
+transition to next level
+
