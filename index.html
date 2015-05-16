@@ -170,7 +170,7 @@ Final Project
             var floorMaterials = [];     
 
             this.setup = function () {
-                //testaudio.play();
+                testaudio.play();
                 document.addEventListener('keydown', onKeyDown, false);
                 document.addEventListener('keyup', onKeyUp, false);
 
@@ -199,7 +199,7 @@ Final Project
                 var pictureMaterial1 = new THREE.MeshBasicMaterial({ map: pictureTexture1 });
 
                 var characterTexture = THREE.ImageUtils.loadTexture('paladin.gif');
-                var characterMaterial = new THREE.MeshBasicMaterial({ map: pictureTexture1 });
+                var characterMaterial = new THREE.MeshBasicMaterial({ map: characterTexture });
 
                 environment = new THREE.Mesh(new THREE.Geometry());
                 this.scene.add(environment);
