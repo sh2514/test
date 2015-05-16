@@ -1,0 +1,381 @@
+<!--
+Shikuan Huang
+Professor Kenneth Perlin
+Computer Graphics
+20, May 2015
+
+Final Project
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title> Shikuan Huang - Computer Graphics Final Project</title>
+</head>
+
+<body style="background-color:snow">
+    <h3>Shikuan Huang - Computer Graphics Final Project</h3>
+    <hr />
+
+    <script src=three.js></script>
+    <script>
+        window.time = 0;
+        window.SimpleScene = function () {
+            this.init = function (name) {
+                this.scene = new THREE.Scene();
+
+                // CREATE THE CAMERA, AND ATTACH IT TO THE SCENE.
+
+                var camera = new THREE.PerspectiveCamera(70, 1.5, 1, 10000);
+                camera.position.z = 10;
+                this.scene.add(camera);
+
+                // CREATE THE WEBGL RENDERER, AND ATTACH IT TO THE DOCUMENT BODY.
+
+                var renderer = new THREE.WebGLRenderer({ alpha: true });
+                renderer.setSize(1050, 700);
+                document.getElementById(name).appendChild(renderer.domElement);
+
+                // CALL THE USER'S SETUP FUNCTION JUST ONCE.
+
+                this.setup();
+
+                // START THE ANIMATION LOOP.
+
+                var that = this;
+                (function tick() {
+                    time = (new Date().getTime()) / 1000;
+                    that.update();
+                    renderer.render(that.scene, camera);
+                    requestAnimationFrame(tick);
+                })();
+
+                //this.container = jQuery('myScene1_id')
+
+                /*//var camera = new THREE.PerspectiveCamera(50, 1.5, 1, 10000);
+                var controls;
+                controls = new THREE.PointerLockControls(camera);
+                this.scene.add(controls.getObject());
+                controls.enabled = true;*/
+            }
+        };
+    </script>
+
+    <table>
+        <tr>
+            <td id="myScene1_id"></td>
+            <td>Click and hold to play music.</td>
+        </tr>
+    </table>
+
+    <script>
+        var testaudio = new Audio('mario.mp3');
+        testaudio.load();
+        var graphic = document.getElementById("myScene1_id");
+        var screenW = 1050;
+        var screenH = 700;
+        var mouseDown = false;
+        var mouseX = 0;
+        var mouseY = 0;
+        var spdX = 0;
+        var spdY = 0;
+
+        var up = false;
+        var down = false;
+        var left = false;
+        var right = false;
+        var gravity = true;
+        var jump = false;
+        var canJump = true;
+        var jumpStart = 0;
+        var inAir = false;
+        var prevY = 0;
+        var accelLevel = 1;
+        var speed = 0.05;
+        var prevDir = 'na';
+        var heldStart = 0;
+        var heldTime = 0;
+        var releaseStart = 0;
+
+        var timer = 0;
+        var lives = 0;
+        var currentlevel = 0;
+
+        //var level1 = [[1, 1, 0, 1, 1], [1, 0, 0, 0, 1], [0, 0, 0, 0, 0], [1, 1, 0, 1, 0], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]];
+        var level1 = [
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+
+        ];
+
+        var onKeyDown = function (event) {
+            switch (event.keyCode) {
+                case 38: // up
+                case 87: // w
+                    up = true;
+                    break;
+                case 40: // down
+                case 83: // s
+                    down = true;
+                    break;
+                case 37: // left
+                case 65: // a
+                    left = true;
+                    break;
+                case 39: // right
+                case 68: // d
+                    right = true;
+                    break;
+                case 32: // space
+                    break;
+            }
+        };
+
+        var onKeyUp = function (event) {
+            accelLevel = 1;
+            releaseStart = time;
+            switch (event.keyCode) {
+                case 38: // up
+                case 87: // w
+                    up = false;
+                    break;
+                case 40: // down
+                case 83: // s
+                    down = false;
+                    break;
+                case 37: // left
+                case 65: // a
+                    left = false;
+                    break;
+                case 39: // right
+                case 68: // d
+                    right = false;
+                    break;
+                case 32: // space
+                    break;
+            }
+        };
+
+        function myScene1() {
+            var environment;
+            var light;
+            var box;
+            var joint;
+            var floor;
+            var floorMaterials = [];     
+
+            this.setup = function () {
+                //testaudio.play();
+                document.addEventListener('keydown', onKeyDown, false);
+                document.addEventListener('keyup', onKeyUp, false);
+
+                graphic.addEventListener('mousemove', function (event) {
+                    mouseX = event.clientX;
+                    mouseY = event.clientY;
+                }, false);
+
+                graphic.addEventListener('mousedown', function (event) {
+                    mouseDown = true;
+                    //testaudio.play();
+                    console.log(box.position);
+                }, false);
+
+                graphic.addEventListener('mouseup', function (event) {
+                    mouseDown = false;
+                    //testaudio.pause();
+                })
+
+                light = new THREE.DirectionalLight(0xffffff);
+                light.position.set(1, 1, 1).normalize();
+                this.scene.add(light);
+
+                THREE.ImageUtils.crossOrigin = 'use-credentials';
+                /*var pictureTexture1 = THREE.ImageUtils.loadTexture('grass.jpg');
+                var pictureMaterial1 = new THREE.MeshBasicMaterial({ map: pictureTexture1 });
+                var characterTexture = THREE.ImageUtils.loadTexture('paladin.gif');
+                var characterMaterial = new THREE.MeshBasicMaterial({ map: pictureTexture1 });*/
+
+                environment = new THREE.Mesh(new THREE.Geometry());
+                this.scene.add(environment);
+
+                var geometry = new THREE.BoxGeometry(1, 1, 1);
+                var redMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
+                var blackMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
+                var whiteMaterial = new THREE.LineBasicMaterial({ color: 0x050505 });
+                var phongMaterial = new THREE.MeshPhongMaterial({
+                    ambient: 0,
+                    emisive: 0x000000,
+                    color: 0xeeeeee,
+                    specular: 0x101010,
+                    shininess: 400,
+                });             
+
+                var bigCircleGeo = new THREE.CircleGeometry(.4, 32);
+                var smallCircleGeo = new THREE.CircleGeometry(.2, 32);
+
+                box = new THREE.Mesh(geometry, phongMaterial);
+                joint = new THREE.Mesh();
+
+                environment.add(box);
+                box.add(joint);
+                box.position.z = 3;
+                box.position.x = 2;
+                box.position.y = 5;
+
+                generateMap(environment, level1);
+
+                environment.position.y -= 6;
+            }
+
+            this.update = function () {
+                spdX = (screenH / 2 - mouseX) / 2000;
+                spdY = (screenW / 2 - mouseY) / 2000;
+                //environment.rotation.x = spdY;
+                //environment.rotation.y = spdX;
+
+                var blockX = 0;
+                var blockY = 0;
+
+                if (left) {
+                    if (prevDir === 'left') {
+                        if (!inAir) {
+                            heldTime++;
+                        }
+                        if (heldTime > 50) {
+                            accelLevel = 2;
+                        }
+                        else if (heldTime > 45) {
+                            accelLevel = 1.75;
+                        }
+                        else if (heldTime > 35) {
+                            accelLevel = 1.5;
+                        }
+                        else if (heldTime > 30) {
+                            accelLevel = 1.25;
+                        }
+                    }
+                    else {
+                        heldTime = 0;
+                        accelLevel = 1;
+                    }
+                    var endPos = box.position.x - 0.05;
+                    var botSide = Math.floor(box.position.y + .05);
+                    var topSide = Math.floor(box.position.y + .9);
+                    if (Math.floor(topSide) < level1.length &&
+                        level1[botSide][Math.floor(endPos)] === 0 && level1[topSide][Math.floor(endPos)] === 0) {
+                        box.position.x -= speed * accelLevel;
+                        environment.position.x += speed * accelLevel;
+                    }
+                    prevDir = 'left';
+                }
+                if (right) {
+                    if (prevDir === 'right') {
+                        if (!inAir) {
+                            heldTime++;
+                        }
+                        if (heldTime > 50) {
+                            accelLevel = 2;
+                        }
+                        else if (heldTime > 45) {
+                            accelLevel = 1.75;
+                        }
+                        else if (heldTime > 35) {
+                            accelLevel = 1.5;
+                        }
+                        else if (heldTime > 30) {
+                            accelLevel = 1.25;
+                        }
+                    }
+                    else {
+                        heldTime = 0;
+                        accelLevel = 1;
+                    }
+                    var endPos = box.position.x + 1 + 0.05;
+                    var botSide = Math.floor(box.position.y + .05);
+                    var topSide = Math.floor(box.position.y + .9);
+                    if (Math.floor(topSide) < level1.length &&
+                        level1[botSide][Math.floor(endPos)] === 0 && level1[topSide][Math.floor(endPos)] === 0) {
+                        box.position.x += speed * accelLevel;
+                        environment.position.x -= speed * accelLevel;
+                    }
+                    prevDir = 'right';
+                }
+                if (up && !jump && canJump) {
+                    jump = true;
+                    jumpStart = time;
+                    canJump = false;
+                    inAir = true;
+                }
+                if (jump) {
+                    if (time - jumpStart > .25) {
+                        jump = false;
+                        fallStart = time;
+                    }
+                    var endPos = box.position.y + 1 + 0.05;
+                    var leftSide = Math.floor(box.position.x + 0.05);
+                    var rightSide = Math.ceil(box.position.x);
+                    if (Math.floor(endPos) < level1.length &&
+                        level1[Math.floor(endPos)][leftSide] === 0 && level1[Math.floor(endPos)][rightSide] === 0) {
+                        box.position.y += 0.2 - (time - jumpStart) * .1 + .02 * accelLevel;
+                    }
+                    else {
+                        jump = false;
+                        fallStart = time;
+                    }
+                }
+                else if (gravity) {
+                    var endPos = box.position.y - 0.05;                 
+                    var leftSide = Math.floor(box.position.x + 0.05);
+                    var rightSide = Math.ceil(box.position.x);
+                    if (Math.floor(endPos) >= 0 &&
+                        level1[Math.floor(endPos)][leftSide] === 0 && level1[Math.floor(endPos)][rightSide] === 0) {
+                        box.position.y -= 0.1;
+                    }
+                    if (prevY == box.position.y) {
+                        canJump = true;
+                        inAir = false;
+                    }
+                    else {
+                        canJump = false;
+                    }
+                    prevY = box.position.y;
+                }
+            }
+        }
+        myScene1.prototype = new SimpleScene;
+        new myScene1().init('myScene1_id');
+
+        function Block(geometry, material) {
+            this.value = new THREE.Mesh(geometry, material);
+        }
+
+        function generateMap(scene, level, materials) {
+            var geometry = new THREE.BoxGeometry(1, 1, 1);
+            var greenMaterial = new THREE.LineBasicMaterial({ color: 0x00ffc0 });
+            for (var i = 0; i < level.length; i++) {
+                for (var j = 0; j < level[i].length; j++) {
+                    if (level[i][j] === 1) {
+                        for (var k = 0; k < 3; k++) {
+                            var newLevelBlock = new THREE.Mesh(geometry, greenMaterial);
+                            newLevelBlock.position.y = i;
+                            newLevelBlock.position.x = j;
+                            newLevelBlock.position.z = 4 - k;
+                            scene.add(newLevelBlock);
+                        }
+                    }    
+                }
+            }
+        }
+    </script>
+    
+</body>
+</html>
