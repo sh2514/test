@@ -18,6 +18,7 @@ Final Project
     <hr />
 
     <script src=three.js></script>
+    <script src=PointerLockControls.js></script>
     <script>
         window.time = 0;
         window.SimpleScene = function () {
@@ -26,7 +27,7 @@ Final Project
 
                 // CREATE THE CAMERA, AND ATTACH IT TO THE SCENE.
 
-                var camera = new THREE.PerspectiveCamera(50, 1.5, 1, 10000);
+                var camera = new THREE.PerspectiveCamera(70, 1.5, 1, 10000);
                 camera.position.z = 10;
                 this.scene.add(camera);
 
@@ -49,6 +50,14 @@ Final Project
                     renderer.render(that.scene, camera);
                     requestAnimationFrame(tick);
                 })();
+
+                //this.container = jQuery('myScene1_id')
+
+                /*//var camera = new THREE.PerspectiveCamera(50, 1.5, 1, 10000);
+                var controls;
+                controls = new THREE.PointerLockControls(camera);
+                this.scene.add(controls.getObject());
+                controls.enabled = true;*/
             }
         };
     </script>
@@ -56,11 +65,13 @@ Final Project
     <table>
         <tr>
             <td id="myScene1_id"></td>
-            <td>Click to roll dice.</td>
+            <td>Click and hold to play music.</td>
         </tr>
     </table>
 
     <script>
+        var testaudio = new Audio('mario.mp3');
+        testaudio.load();
         var graphic = document.getElementById("myScene1_id");
         var screenW = 1050;
         var screenH = 700;
@@ -70,29 +81,99 @@ Final Project
         var spdX = 0;
         var spdY = 0;
 
+        var up = false;
+        var down = false;
+        var left = false;
+        var right = false;
+        var gravity = true;
+        var jump = false;
+        var jumpStart = 0;
         var inAir = false;
-        var currentXRotSpd = 0;
-        var currentYRotSpd = 0;
-        var xRotCount = 0;
-        var zRotCount = 0;
-        var startTime = 0;
+        var accelLevel = 1;
+        var speed = 0.05;
+        var prevDir = 'na';
+        var heldTime = 0;
+        var releaseTime = 0;
+
+        var timer = 0;
+        var lives = 0;
+        var currentlevel = 0;
+
+        //var level1 = [[1, 1, 0, 1, 1], [1, 0, 0, 0, 1], [0, 0, 0, 0, 0], [1, 1, 0, 1, 0], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]];
+        var level1 = [
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+
+        ];
+
+        var onKeyDown = function (event) {
+            switch (event.keyCode) {
+                case 38: // up
+                case 87: // w
+                    up = true;
+                    break;
+                case 40: // down
+                case 83: // s
+                    down = true;
+                    break;
+                case 37: // left
+                case 65: // a
+                    left = true;
+                    break;
+                case 39: // right
+                case 68: // d
+                    right = true;
+                    break;
+                case 32: // space
+                    break;
+            }
+        };
+
+        var onKeyUp = function (event) {
+            switch (event.keyCode) {
+                case 38: // up
+                case 87: // w
+                    up = false;
+                    break;
+                case 40: // down
+                case 83: // s
+                    down = false;
+                    break;
+                case 37: // left
+                case 65: // a
+                    left = false;
+                    break;
+                case 39: // right
+                case 68: // d
+                    right = false;
+                    break;
+                case 32: // space
+                    break;
+            }
+        };
 
         function myScene1() {
             var environment;
             var light;
             var box;
-            var box2;
-            var face1;
-            var face2 = [];
-            var face3 = [];
-            var face4 = [];
-            var face5 = [];
-            var face6 = [];
             var joint;
             var floor;
             var floorMaterials = [];     
 
             this.setup = function () {
+                testaudio.play();
+                document.addEventListener('keydown', onKeyDown, false);
+                document.addEventListener('keyup', onKeyUp, false);
+
                 graphic.addEventListener('mousemove', function (event) {
                     mouseX = event.clientX;
                     mouseY = event.clientY;
@@ -100,227 +181,137 @@ Final Project
 
                 graphic.addEventListener('mousedown', function (event) {
                     mouseDown = true;
+                    //testaudio.play();
+                    console.log(box.position);
                 }, false);
 
                 graphic.addEventListener('mouseup', function (event) {
                     mouseDown = false;
+                    //testaudio.pause();
                 })
+
+                light = new THREE.DirectionalLight(0xffffff);
+                light.position.set(1, 1, 1).normalize();
+                this.scene.add(light);
+
+                THREE.ImageUtils.crossOrigin = 'use-credentials';
+                var pictureTexture = THREE.ImageUtils.loadTexture('grass.jpg');
+                var pictureMaterial = new THREE.MeshBasicMaterial({ map: pictureTexture });
 
                 environment = new THREE.Mesh(new THREE.Geometry());
                 this.scene.add(environment);
 
-                light = new THREE.DirectionalLight(0xffffff);
-                light.position.set(1, 1, 1).normalize();
-                environment.add(light);
-
-                THREE.ImageUtils.crossOrigin = 'use-credentials';
-                var pictureTexture = THREE.ImageUtils.loadTexture('cloud.jpg');
-                var pictureMaterial = new THREE.MeshBasicMaterial({ map: pictureTexture });
-
-                var geometry = new THREE.BoxGeometry(2, 2, 2);
+                var geometry = new THREE.BoxGeometry(1, 1, 1);
                 var redMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
                 var blackMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
                 var whiteMaterial = new THREE.LineBasicMaterial({ color: 0x050505 });
-                var material = new THREE.MeshPhongMaterial({
+                var phongMaterial = new THREE.MeshPhongMaterial({
                     ambient: 0,
                     emisive: 0x000000,
                     color: 0xeeeeee,
                     specular: 0x101010,
                     shininess: 400,
-                });
+                });             
 
                 var bigCircleGeo = new THREE.CircleGeometry(.4, 32);
                 var smallCircleGeo = new THREE.CircleGeometry(.2, 32);
 
-                var floorGeo = new THREE.PlaneGeometry(9, 9, 10, 10);
-
-                floorMaterials.push(new THREE.MeshBasicMaterial({color:0xffffcc, side: THREE.DoubleSide}));
-                floorMaterials.push(new THREE.MeshBasicMaterial({color:0x200000, side: THREE.DoubleSide}));
-                var faceCount = 100 ;
-
-                for (var i = 0; i < faceCount; i++) {
-                    var j = i * 2;
-                    floorGeo.faces[j].materialIndex = ((i + Math.floor(i / 10)) % 2);
-                    floorGeo.faces[j + 1].materialIndex = ((i + Math.floor(i / 10)) % 2);
-                }
-                
-
-                box = new THREE.Mesh(geometry, pictureMaterial);
+                box = new THREE.Mesh(geometry, phongMaterial);
                 joint = new THREE.Mesh();
-                face1 = new THREE.Mesh(bigCircleGeo, redMaterial);
-                face2[0] = new THREE.Mesh(smallCircleGeo, blackMaterial);
-                face2[1] = new THREE.Mesh(smallCircleGeo, blackMaterial);
-                face3[0] = new THREE.Mesh(smallCircleGeo, blackMaterial);
-                face3[1] = new THREE.Mesh(smallCircleGeo, blackMaterial);
-                face3[2] = new THREE.Mesh(smallCircleGeo, blackMaterial);
-                face4[0] = new THREE.Mesh(smallCircleGeo, blackMaterial);
-                face4[1] = new THREE.Mesh(smallCircleGeo, blackMaterial);
-                face4[2] = new THREE.Mesh(smallCircleGeo, blackMaterial);
-                face4[3] = new THREE.Mesh(smallCircleGeo, blackMaterial);
-                face5[0] = new THREE.Mesh(smallCircleGeo, blackMaterial);
-                face5[1] = new THREE.Mesh(smallCircleGeo, blackMaterial);
-                face5[2] = new THREE.Mesh(smallCircleGeo, blackMaterial);
-                face5[3] = new THREE.Mesh(smallCircleGeo, blackMaterial);
-                face5[4] = new THREE.Mesh(smallCircleGeo, blackMaterial);
-                face6[0] = new THREE.Mesh(smallCircleGeo, blackMaterial);
-                face6[1] = new THREE.Mesh(smallCircleGeo, blackMaterial);
-                face6[2] = new THREE.Mesh(smallCircleGeo, blackMaterial);
-                face6[3] = new THREE.Mesh(smallCircleGeo, blackMaterial);
-                face6[4] = new THREE.Mesh(smallCircleGeo, blackMaterial);
-                face6[5] = new THREE.Mesh(smallCircleGeo, blackMaterial);
 
                 environment.add(box);
                 box.add(joint);
-                joint.add(face1);
-                joint.add(face2[0]);
-                joint.add(face2[1]);
-                joint.add(face3[0]);
-                joint.add(face3[1]);
-                joint.add(face3[2]);
-                joint.add(face4[0]);
-                joint.add(face4[1]);
-                joint.add(face4[2]);
-                joint.add(face4[3]);
-                joint.add(face5[0]);
-                joint.add(face5[1]);
-                joint.add(face5[2]);
-                joint.add(face5[3]);
-                joint.add(face5[4]);
-                joint.add(face6[0]);
-                joint.add(face6[1]);
-                joint.add(face6[2]);
-                joint.add(face6[3]);
-                joint.add(face6[4]);
-                joint.add(face6[5]);
+                box.position.z = 3;
+                box.position.x = 2;
+                box.position.y = 5;
 
-                plane = new THREE.Mesh(floorGeo, new THREE.MeshFaceMaterial(floorMaterials));
-                plane.position.y = -2;
-                plane.position.z = 1;
-                plane.rotation.x = -Math.PI / 2.5;
-                plane.rotation.z = Math.PI / 4.5;
+                generateMap(environment, level1, pictureMaterial);
 
-                box.position.y = -.9;
-                box.position.z = 1;
-                box.rotation.x = -Math.PI / 2.5;
-                box.rotation.z = Math.PI / 4.5;
-
-                environment.add(plane);
-
-                face1.position.x = 1.0001;
-                face1.rotation.y = Math.PI / 2;
-                face2[0].position.x = -.4;
-                face2[0].position.y = .4;
-                face2[0].position.z = 1.0001;
-                face2[1].position.x = .4;
-                face2[1].position.y = -.4;
-                face2[1].position.z = 1.0001;
-
-                face3[0].position.x = -1.0001;
-                face3[0].position.y = -.55;
-                face3[0].position.z = -.55;
-                face3[0].rotation.y = -Math.PI / 2;
-                face3[1].position.x = -1.0001;
-                face3[1].position.y = 0;
-                face3[1].position.z = 0;
-                face3[1].rotation.y = -Math.PI / 2;
-                face3[2].position.x = -1.0001;
-                face3[2].position.y = .55;
-                face3[2].position.z = .55;
-                face3[2].rotation.y = -Math.PI / 2;
-
-                face4[0].position.x = -.4;
-                face4[0].position.y = -.4;
-                face4[0].position.z = -1.0001;
-                face4[0].rotation.y = Math.PI;
-                face4[1].position.x = .4;
-                face4[1].position.y = .4;
-                face4[1].position.z = -1.0001;
-                face4[1].rotation.y = Math.PI;
-                face4[2].position.x = .4;
-                face4[2].position.y = -.4;
-                face4[2].position.z = -1.0001;
-                face4[2].rotation.y = Math.PI;
-                face4[3].position.x = -.4;
-                face4[3].position.y = .4;
-                face4[3].position.z = -1.0001;
-                face4[3].rotation.y = Math.PI;
-
-                face5[0].position.x = 0;
-                face5[0].position.y = 1.0001;
-                face5[0].position.z = 0;
-                face5[0].rotation.x = -Math.PI / 2;
-                face5[1].position.x = -.55;
-                face5[1].position.y = 1.0001;
-                face5[1].position.z = -.55;
-                face5[1].rotation.x = -Math.PI / 2;
-                face5[2].position.x = .55;
-                face5[2].position.y = 1.0001;
-                face5[2].position.z = .55;
-                face5[2].rotation.x = -Math.PI / 2;
-                face5[3].position.x = .55;
-                face5[3].position.y = 1.0001;
-                face5[3].position.z = -.55;
-                face5[3].rotation.x = -Math.PI / 2;
-                face5[4].position.x = -.55;
-                face5[4].position.y = 1.0001;
-                face5[4].position.z = .55;
-                face5[4].rotation.x = -Math.PI / 2;
-
-                face6[0].position.x = -.45;
-                face6[0].position.y = -1.0001;
-                face6[0].position.z = -.55;
-                face6[0].rotation.x = Math.PI / 2;
-                face6[1].position.x = .45;
-                face6[1].position.y = -1.0001;
-                face6[1].position.z = .55;
-                face6[1].rotation.x = Math.PI / 2;
-                face6[2].position.x = .45;
-                face6[2].position.y = -1.0001;
-                face6[2].position.z = -.55;
-                face6[2].rotation.x = Math.PI / 2;
-                face6[3].position.x = -.45;
-                face6[3].position.y = -1.0001;
-                face6[3].position.z = .55;
-                face6[3].rotation.x = Math.PI / 2;
-                face6[4].position.x = -.45;
-                face6[4].position.y = -1.0001;
-                face6[4].position.z = 0;
-                face6[4].rotation.x = Math.PI / 2;
-                face6[5].position.x = .45;
-                face6[5].position.y = -1.0001;
-                face6[5].position.z = 0;
-                face6[5].rotation.x = Math.PI / 2;
+                environment.position.y -= 6;
             }
 
             this.update = function () {
-                if (!inAir && mouseDown) {
-                    inAir = true;
-                    startTime = time;
-                }
-
-                if (inAir) {
-                    var randFactor = 1 + Math.floor(Math.random() * 4);
-
-                    box.rotation.z += 0.02;
-                    box.rotation.x += 0.02;
-
-                    box.position.y = Math.abs(Math.sin((time - startTime) * 1.4) * 30) * Math.pow(.6, time - startTime) - .9;
-
-                    if (time - startTime > 6.7) {
-                        inAir = false;
-                        box.position.y = -.9;
-                    }
-                }
 
                 spdX = (screenH / 2 - mouseX) / 2000;
                 spdY = (screenW / 2 - mouseY) / 2000;
+                //environment.rotation.x = spdY;
+                //environment.rotation.y = spdX;
 
-                environment.rotation.x = spdY;
-                environment.rotation.y = spdX;            
+                var blockX = 0;
+                var blockY = 0;
+
+                if (left) {
+                    if (prevDir === 'left') {
+
+                    }
+                    var endPos = box.position.x - 0.05;
+                    var botSide = Math.floor(box.position.y + .05);
+                    var topSide = Math.floor(box.position.y + .9);
+                    if (level1[botSide][Math.floor(endPos)] === 0 && level1[topSide][Math.floor(endPos)] === 0) {
+                        box.position.x -= speed * accelLevel;
+                        environment.position.x += speed * accelLevel;
+                    }
+                }
+                if (right) {
+                    var endPos = box.position.x + 1 + 0.05;
+                    var botSide = Math.floor(box.position.y + .05);
+                    var topSide = Math.floor(box.position.y + .9);
+                    if (level1[botSide][Math.floor(endPos)] === 0 && level1[topSide][Math.floor(endPos)] === 0) {
+                        box.position.x += speed * accelLevel;
+                        environment.position.x -= speed * accelLevel;
+                    }
+                }
+                if (up && !jump) {
+                    jump = true;
+                    jumpStart = time;
+                }
+                if (jump) {
+                    if (time - jumpStart > .4) {
+                        jump = false;
+                    }
+                    var endPos = box.position.y + 1 + 0.05;
+                    var leftSide = Math.floor(box.position.x + 0.05);
+                    var rightSide = Math.ceil(box.position.x);
+                    if (Math.floor(endPos) < level1.length &&
+                        level1[Math.floor(endPos)][leftSide] === 0 && level1[Math.floor(endPos)][rightSide] === 0) {
+                        box.position.y += 0.20;
+                    }       
+                }
+                else if (gravity) {
+                    var endPos = box.position.y - 0.05;
+                    var leftSide = Math.floor(box.position.x + 0.05);
+                    var rightSide = Math.ceil(box.position.x);
+                    if (Math.floor(endPos) >= 0 &&
+                        level1[Math.floor(endPos)][leftSide] === 0 && level1[Math.floor(endPos)][rightSide] === 0) {
+                        box.position.y -= 0.1;
+                    }
+                }
             }
         }
         myScene1.prototype = new SimpleScene;
         new myScene1().init('myScene1_id');
+
+        function Block(geometry, material) {
+            this.value = new THREE.Mesh(geometry, material);
+        }
+
+        function generateMap(scene, level, material) {
+            var geometry = new THREE.BoxGeometry(1, 1, 1);
+            var greenMaterial = new THREE.LineBasicMaterial({ color: 0x00ffc0 });
+            for (var i = 0; i < level.length; i++) {
+                for (var j = 0; j < level[i].length; j++) {
+                    if (level[i][j] === 1) {
+                        for (var k = 0; k < 3; k++) {
+                            var newLevelBlock = new THREE.Mesh(geometry, material);
+                            newLevelBlock.position.y = i;
+                            newLevelBlock.position.x = j;
+                            newLevelBlock.position.z = 4 - k;
+                            scene.add(newLevelBlock);
+                        }
+                    }    
+                }
+            }
+        }
     </script>
     
 </body>
