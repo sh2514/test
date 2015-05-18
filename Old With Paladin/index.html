@@ -64,7 +64,7 @@ Final Project
     <table>
         <tr>
             <td id="myScene1_id"></td>
-            <td>Click and hold to play music.</td>
+            <td>W, A, S, D to move.</td>
         </tr>
     </table>
 
@@ -88,14 +88,12 @@ Final Project
         var jump = false;
         var canJump = true;
         var jumpStart = 0;
-        var inAir = false;
         var prevY = 0;
         var accelLevel = 1;
         var speed = 0.05;
         var prevDir = 'na';
-        var heldStart = 0;
         var heldTime = 0;
-        var releaseStart = 0;
+        var releaseTime = 0;
 
         var timer = 0;
         var lives = 0;
@@ -141,8 +139,6 @@ Final Project
         };
 
         var onKeyUp = function (event) {
-            accelLevel = 1;
-            releaseStart = time;
             switch (event.keyCode) {
                 case 38: // up
                 case 87: // w
@@ -174,7 +170,7 @@ Final Project
             var floorMaterials = [];     
 
             this.setup = function () {
-                //testaudio.play();
+                testaudio.play();
                 document.addEventListener('keydown', onKeyDown, false);
                 document.addEventListener('keyup', onKeyUp, false);
 
@@ -199,10 +195,11 @@ Final Project
                 this.scene.add(light);
 
                 THREE.ImageUtils.crossOrigin = 'use-credentials';
-                /*var pictureTexture1 = THREE.ImageUtils.loadTexture('grass.jpg');
+                var pictureTexture1 = THREE.ImageUtils.loadTexture('grass.jpg');
                 var pictureMaterial1 = new THREE.MeshBasicMaterial({ map: pictureTexture1 });
+
                 var characterTexture = THREE.ImageUtils.loadTexture('paladin.gif');
-                var characterMaterial = new THREE.MeshBasicMaterial({ map: pictureTexture1 });*/
+                var characterMaterial = new THREE.MeshBasicMaterial({ map: characterTexture });
 
                 environment = new THREE.Mesh(new THREE.Geometry());
                 this.scene.add(environment);
@@ -222,7 +219,7 @@ Final Project
                 var bigCircleGeo = new THREE.CircleGeometry(.4, 32);
                 var smallCircleGeo = new THREE.CircleGeometry(.2, 32);
 
-                box = new THREE.Mesh(geometry, phongMaterial);
+                box = new THREE.Mesh(geometry, characterMaterial);
                 joint = new THREE.Mesh();
 
                 environment.add(box);
@@ -231,12 +228,13 @@ Final Project
                 box.position.x = 2;
                 box.position.y = 5;
 
-                generateMap(environment, level1);
+                generateMap(environment, level1, pictureMaterial1);
 
                 environment.position.y -= 6;
             }
 
             this.update = function () {
+
                 spdX = (screenH / 2 - mouseX) / 2000;
                 spdY = (screenW / 2 - mouseY) / 2000;
                 //environment.rotation.x = spdY;
@@ -247,93 +245,47 @@ Final Project
 
                 if (left) {
                     if (prevDir === 'left') {
-                        if (!inAir) {
-                            heldTime++;
-                        }
-                        if (heldTime > 50) {
-                            accelLevel = 2;
-                        }
-                        else if (heldTime > 45) {
-                            accelLevel = 1.75;
-                        }
-                        else if (heldTime > 35) {
-                            accelLevel = 1.5;
-                        }
-                        else if (heldTime > 30) {
-                            accelLevel = 1.25;
-                        }
-                    }
-                    else {
-                        heldTime = 0;
-                        accelLevel = 1;
+
                     }
                     var endPos = box.position.x - 0.05;
                     var botSide = Math.floor(box.position.y + .05);
                     var topSide = Math.floor(box.position.y + .9);
-                    if (Math.floor(topSide) < level1.length &&
-                        level1[botSide][Math.floor(endPos)] === 0 && level1[topSide][Math.floor(endPos)] === 0) {
+                    if (level1[botSide][Math.floor(endPos)] === 0 && level1[topSide][Math.floor(endPos)] === 0) {
                         box.position.x -= speed * accelLevel;
                         environment.position.x += speed * accelLevel;
                     }
-                    prevDir = 'left';
                 }
                 if (right) {
-                    if (prevDir === 'right') {
-                        if (!inAir) {
-                            heldTime++;
-                        }
-                        if (heldTime > 50) {
-                            accelLevel = 2;
-                        }
-                        else if (heldTime > 45) {
-                            accelLevel = 1.75;
-                        }
-                        else if (heldTime > 35) {
-                            accelLevel = 1.5;
-                        }
-                        else if (heldTime > 30) {
-                            accelLevel = 1.25;
-                        }
-                    }
-                    else {
-                        heldTime = 0;
-                        accelLevel = 1;
-                    }
                     var endPos = box.position.x + 1 + 0.05;
                     var botSide = Math.floor(box.position.y + .05);
                     var topSide = Math.floor(box.position.y + .9);
-                    if (Math.floor(topSide) < level1.length &&
-                        level1[botSide][Math.floor(endPos)] === 0 && level1[topSide][Math.floor(endPos)] === 0) {
+                    if (level1[botSide][Math.floor(endPos)] === 0 && level1[topSide][Math.floor(endPos)] === 0) {
                         box.position.x += speed * accelLevel;
                         environment.position.x -= speed * accelLevel;
                     }
-                    prevDir = 'right';
                 }
                 if (up && !jump && canJump) {
                     jump = true;
                     jumpStart = time;
                     canJump = false;
-                    inAir = true;
                 }
                 if (jump) {
-                    if (time - jumpStart > .25) {
+                    if (time - jumpStart > .4) {
                         jump = false;
-                        fallStart = time;
                     }
                     var endPos = box.position.y + 1 + 0.05;
                     var leftSide = Math.floor(box.position.x + 0.05);
                     var rightSide = Math.ceil(box.position.x);
                     if (Math.floor(endPos) < level1.length &&
                         level1[Math.floor(endPos)][leftSide] === 0 && level1[Math.floor(endPos)][rightSide] === 0) {
-                        box.position.y += 0.2 - (time - jumpStart) * .1 + .02 * accelLevel;
+                        box.position.y += 0.20;
                     }
                     else {
                         jump = false;
-                        fallStart = time;
                     }
                 }
                 else if (gravity) {
-                    var endPos = box.position.y - 0.05;                 
+                    var endPos = box.position.y - 0.05;
                     var leftSide = Math.floor(box.position.x + 0.05);
                     var rightSide = Math.ceil(box.position.x);
                     if (Math.floor(endPos) >= 0 &&
@@ -342,7 +294,6 @@ Final Project
                     }
                     if (prevY == box.position.y) {
                         canJump = true;
-                        inAir = false;
                     }
                     else {
                         canJump = false;
@@ -365,7 +316,7 @@ Final Project
                 for (var j = 0; j < level[i].length; j++) {
                     if (level[i][j] === 1) {
                         for (var k = 0; k < 3; k++) {
-                            var newLevelBlock = new THREE.Mesh(geometry, greenMaterial);
+                            var newLevelBlock = new THREE.Mesh(geometry, materials);
                             newLevelBlock.position.y = i;
                             newLevelBlock.position.x = j;
                             newLevelBlock.position.z = 4 - k;
