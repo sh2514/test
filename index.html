@@ -49,14 +49,6 @@ Final Project
                     renderer.render(that.scene, camera);
                     requestAnimationFrame(tick);
                 })();
-
-                //this.container = jQuery('myScene1_id')
-
-                /*//var camera = new THREE.PerspectiveCamera(50, 1.5, 1, 10000);
-                var controls;
-                controls = new THREE.PointerLockControls(camera);
-                this.scene.add(controls.getObject());
-                controls.enabled = true;*/
             }
         };
     </script>
@@ -75,6 +67,7 @@ Final Project
         var screenW = 1050;
         var screenH = 700;
         var mouseDown = false;
+        var mouseUp = false;
         var mouseX = 0;
         var mouseY = 0;
         var spdX = 0;
@@ -85,11 +78,17 @@ Final Project
         var mShiftElapsed = 0;
         var zShiftElapsed2 = 0;
 
+        var cameraRecord = true;
+        var prevCameraX = 0;
+        var prevCameraY = 0;
+        var prevCameraZ = 0;
+
         var up = false;
         var down = false;
         var left = false;
         var right = false;
         var gravity = true;
+        var restDuration = 0;
         var jump = false;
         var canJump = true;
         var jumpStart = 0;
@@ -100,12 +99,17 @@ Final Project
         var dropDuration = 0;
         var accelLevel = 1;
         var speed = 0.05;
-        var prevDir = 'na';
+        var prevDir = 'right';
         var heldStart = 0;
         var heldTime = 0;
         var releaseStart = 0;
+        var turnDir = 'right';
         var dead = false;
         var noAction = false;
+
+        var topJoint, neckJoint, lLegJoint, rLegJoint, lArmJoint, rArmJoint;
+        var boxGeometry, headGeometry, hatGeometry, headBandGeometry, frameGeometry, lensGeometry, earGeometry, eyeSpotGeometry, eyeGeometry, bodyGeometry, scarfGeometry, bagBodyGeometry, bagTopGeometry, legGeometry, armGeometry, gloveGeometry;
+        var box, head, hat, headBand, lFrame, rFrame, lLens, rLens, lEar, rEar, lEyeSpot, rEyeSpot, lEye, rEye, body, scarf, bagBody, bagTop, lLeg, rLeg, lArm, rArm, lGlove, rGlove;
 
         var map;
         var loadLevel = false;
@@ -340,10 +344,12 @@ Final Project
                 case 37: // left
                 case 65: // a
                     left = false;
+                    heldTime = 0;
                     break;
                 case 39: // right
                 case 68: // d
                     right = false;
+                    heldTime = 0;
                     break;
                 case 32: // space
                     break;
@@ -356,7 +362,6 @@ Final Project
         function myScene1() {
             var environment;
             var light;
-            var box;
             var joint;
             var floor;
             var floorMaterials = [];     
@@ -373,6 +378,7 @@ Final Project
 
                 graphic.addEventListener('mousedown', function (event) {
                     mouseDown = true;
+                    mouseUp = false;
                     //testaudio.play();
                     console.log(box.position);
                     console.log(currentLevel + ", xShift = " + xShiftElapsed + ", zShift = " + zShiftElapsed + ", mShift = " +
@@ -381,6 +387,7 @@ Final Project
 
                 graphic.addEventListener('mouseup', function (event) {
                     mouseDown = false;
+                    mouseUp = true;
                     //testaudio.pause();
                 })
 
@@ -406,11 +413,6 @@ Final Project
                     }
                     this.loadLevel();
                 }
-
-                /*spdX = (screenH / 2 - mouseX) / 2000;
-                spdY = (screenW / 2 - mouseY) / 2000;
-                environment.rotation.x = spdY;
-                environment.rotation.y = spdX;*/
 
                 // Shift camera if character is high up
                 if (box.position.y > cameraShifts[currentLevel][0]) {
@@ -466,7 +468,37 @@ Final Project
                     }   
                 }
 
-                if (left) {
+                if (mouseDown) {
+                    if (cameraRecord) {
+                        prevCameraX = environment.rotation.x;
+                        prevCameraY = environment.rotation.y;
+                        prevCameraZ = environment.rotation.z;
+                    }
+
+                    spdX = (screenH / 2 - mouseX) / 2000;
+                    spdY = (screenW / 2 - mouseY) / 2000;
+                    environment.rotation.x = spdY;
+                    environment.rotation.y = spdX;
+                    cameraRecord = false;
+                }
+                if (mouseUp) {
+                    environment.rotation.x = prevCameraX;
+                    environment.rotation.y = prevCameraY;
+                    environment.rotation.z = prevCameraZ;
+                    cameraRecord = true;
+                }
+
+                if (stillTurning) {
+                    this.turn(turnDir);
+                }
+
+                if ((!left && !right && !up) || (left && right)) {
+                    accelLevel = 1;
+                    this.walk('rest');
+                }
+
+                if (left && !right) {
+                    this.walk('walk');
                     if (prevDir === 'left') {
                         if (!inAir) {
                             heldTime++;
@@ -487,6 +519,8 @@ Final Project
                     else {
                         heldTime = 0;
                         accelLevel = 1;
+                        turnDir = 'left';
+                        this.turn(turnDir);
                     }
                     var endPos = box.position.x - 0.05;
                     var botSide = Math.floor(box.position.y + .05);
@@ -501,7 +535,8 @@ Final Project
                     }
                     prevDir = 'left';
                 }
-                if (right) {
+                if (right && !left) {
+                    this.walk('walk');
                     if (prevDir === 'right') {
                         if (!inAir) {
                             heldTime++;
@@ -522,6 +557,8 @@ Final Project
                     else {
                         heldTime = 0;
                         accelLevel = 1;
+                        turnDir = 'right';
+                        this.turn(turnDir);
                     }
                     var endPos = box.position.x + 1 + 0.05;
                     var botSide = Math.floor(box.position.y + .05);
@@ -635,6 +672,10 @@ Final Project
                 zShiftElapsed = 0;
                 mShiftElapsed = 0;
                 zShiftElapsed2 = 0;
+
+                turnDir = 'right';
+                facing = Math.PI;
+                stillTurning = false;
             },
 
             this.loadCharacter = function () {
@@ -645,7 +686,7 @@ Final Project
                     specular: 0x101010,
                     shininess: 400,
                 });
-                var boxGeometry = new THREE.BoxGeometry(0.00, 0.00, 0.00);
+                boxGeometry = new THREE.BoxGeometry(0.00, 0.00, 0.00);
                 box = new THREE.Mesh(boxGeometry, phongMaterial);
                 box.position.z = 3;
                 box.position.x = startPosForLevel[currentLevel][0];
@@ -700,162 +741,331 @@ Final Project
                     specular: 0xfff0f0,
                     shininess: 5,
                 });
+                var eyeSpotMaterial = new THREE.LineBasicMaterial({ color: 0xDF7401 });
                 
                 
                 // Top of head joint
-                var topJoint = new THREE.Mesh();
+                topJoint = new THREE.Mesh();
                 topJoint.position.y += .6;
                 box.add(topJoint);
 
-                var headGeometry = new THREE.SphereGeometry(.4, 24, 24);
-                var head = new THREE.Mesh(headGeometry, lightSkinMaterial);
+                headGeometry = new THREE.SphereGeometry(.4, 24, 24);
+                head = new THREE.Mesh(headGeometry, lightSkinMaterial);
                 topJoint.add(head);
                 head.position.y -= .02;
 
-                var hatGeometry = new THREE.SphereGeometry(.55, 8, 8, 0, 2 * Math.PI, 0, Math.PI / 2);
-                var hat = new THREE.Mesh(hatGeometry, phongLightGreenHatMaterial);
+                hatGeometry = new THREE.SphereGeometry(.55, 8, 8, 0, 2 * Math.PI, 0, Math.PI / 2);
+                hat = new THREE.Mesh(hatGeometry, phongLightGreenHatMaterial);
                 topJoint.add(hat);
 
-                var headBandGeometry = new THREE.TorusGeometry(.5, .04, 10, 10);
-                var headBand = new THREE.Mesh(headBandGeometry, phongPinkScarfMaterial);
+                headBandGeometry = new THREE.TorusGeometry(.5, .04, 10, 10);
+                headBand = new THREE.Mesh(headBandGeometry, phongPinkScarfMaterial);
                 headBand.rotation.x += Math.PI / 2;
                 headBand.position.y += .2;
                 topJoint.add(headBand);
 
-                var lframeGeometry = new THREE.BoxGeometry(.05, .23, .23);
-                var lframe = new THREE.Mesh(lframeGeometry, phongPinkScarfMaterial);
-                lframe.position.y += .25;
-                lframe.position.z -= .2;
-                lframe.position.x += .48;
-                lframe.rotation.y += .4;
-                topJoint.add(lframe);
+                frameGeometry = new THREE.BoxGeometry(.05, .23, .23);
+                lFrame = new THREE.Mesh(frameGeometry, phongPinkScarfMaterial);
+                lFrame.position.y += .25;
+                lFrame.position.z -= .2;
+                lFrame.position.x += .48;
+                lFrame.rotation.y += .4;
+                topJoint.add(lFrame);
+                rFrame = new THREE.Mesh(frameGeometry, phongPinkScarfMaterial);
+                rFrame.position.y += .25;
+                rFrame.position.z += .2;
+                rFrame.position.x += .48;
+                rFrame.rotation.y -= .4;
+                topJoint.add(rFrame);
 
-                var rframeGeometry = new THREE.BoxGeometry(.05, .23, .23);
-                var rframe = new THREE.Mesh(rframeGeometry, phongPinkScarfMaterial);
-                rframe.position.y += .25;
-                rframe.position.z += .2;
-                rframe.position.x += .48;
-                rframe.rotation.y -= .4;
-                topJoint.add(rframe);
-
-                var lLensGeometry = new THREE.BoxGeometry(.01, .18, .18);
-                var lLens = new THREE.Mesh(lLensGeometry, phongLensMaterial);
+                lensGeometry = new THREE.BoxGeometry(.01, .18, .18);
+                lLens = new THREE.Mesh(lensGeometry, phongLensMaterial);
                 lLens.position.y += .25;
-                lLens.position.z -= .23;
+                lLens.position.z -= .21;
                 lLens.position.x += .51;
                 lLens.rotation.y += .4;
                 topJoint.add(lLens);
-
-                var rLensGeometry = new THREE.BoxGeometry(.01, .18, .18);
-                var rLens = new THREE.Mesh(rLensGeometry, phongLensMaterial);
+                rLens = new THREE.Mesh(lensGeometry, phongLensMaterial);
                 rLens.position.y += .25;
-                rLens.position.z += .23;
+                rLens.position.z += .21;
                 rLens.position.x += .51;
                 rLens.rotation.y -= .4;
                 topJoint.add(rLens);
 
-                var lEarGeometry = new THREE.TetrahedronGeometry(.15);
-                var lEar = new THREE.Mesh(lEarGeometry, lightSkinMaterial);
+                earGeometry = new THREE.TetrahedronGeometry(.15);
+                lEar = new THREE.Mesh(earGeometry, lightSkinMaterial);
                 lEar.position.x += .24;
                 lEar.position.y += .45;
                 lEar.position.z -= .25;
                 lEar.rotation.x += Math.PI / 2;
                 topJoint.add(lEar);
-
-                var rEarGeometry = new THREE.TetrahedronGeometry(.15);
-                var rEar = new THREE.Mesh(rEarGeometry, lightSkinMaterial);
+                rEar = new THREE.Mesh(earGeometry, lightSkinMaterial);
                 rEar.position.x += .24;
                 rEar.position.y += .45;
                 rEar.position.z += .25;
                 rEar.rotation.x -= .3;
                 topJoint.add(rEar);
 
-                //box.rotation.y += 3 * Math.PI / 2;
-                //topJoint.rotation.z += .25;
+                eyeSpotGeometry = new THREE.CircleGeometry(.1, 10);
+                lEyeSpot = new THREE.Mesh(eyeSpotGeometry, eyeSpotMaterial);
+                lEyeSpot.position.y -= .08;
+                lEyeSpot.position.z -= .23;
+                lEyeSpot.position.x += .35;
+                lEyeSpot.rotation.y += .4 + Math.PI / 2;
+                lEyeSpot.rotation.z += .2;
+                topJoint.add(lEyeSpot);
+                rEyeSpot = new THREE.Mesh(eyeSpotGeometry, eyeSpotMaterial);
+                rEyeSpot.position.y -= .08;
+                rEyeSpot.position.z += .23;
+                rEyeSpot.position.x += .35;
+                rEyeSpot.rotation.y += .9;
+                rEyeSpot.rotation.z += .2;
+                topJoint.add(rEyeSpot);
 
+                eyeGeometry = new THREE.TorusGeometry(.05, .01, 4, 4, Math.PI);
+                lEye = new THREE.Mesh(eyeGeometry, blackMaterial);
+                lEye.rotation.y += Math.PI / 2 + .4;
+                lEye.position.x += .38;
+                lEye.position.y -= .12;
+                lEye.position.z -= .2;
+                topJoint.add(lEye);
+                rEye = new THREE.Mesh(eyeGeometry, blackMaterial);
+                rEye.rotation.y += Math.PI / 2 - .4;
+                rEye.position.x += .38;
+                rEye.position.y -= .12;
+                rEye.position.z += .2;
+                topJoint.add(rEye);
+
+                mouth = new THREE.Mesh(eyeGeometry, blackMaterial);
+                mouth.rotation.y += Math.PI / 2;
+                mouth.rotation.x += Math.PI;
+                mouth.position.x += .30;
+                mouth.position.y -= .25;
+                topJoint.add(mouth);
+
+                topJoint.rotation.z += .25;
+                //box.rotation.y += 3 * Math.PI / 2;
 
                 // Neck joint
-                var neckJoint = new THREE.Mesh();
+                neckJoint = new THREE.Mesh();
                 neckJoint.position.y += .15;
                 box.add(neckJoint);
 
-                /*var chestGeometry = new THREE.BoxGeometry(.3, .4, .6);
-                var chest = new THREE.Mesh(chestGeometry, phongLightSkinMaterial);
-                joint.add(chest);
-                chest.position.y += .2;*/
-
-                var bodyGeometry = new THREE.SphereGeometry(.35, 8, 8);
-                var body = new THREE.Mesh(bodyGeometry, lightSkinMaterial);
+                bodyGeometry = new THREE.SphereGeometry(.35, 8, 8);
+                body = new THREE.Mesh(bodyGeometry, lightSkinMaterial);
                 neckJoint.add(body);
 
-                var scarfGeometry = new THREE.TorusGeometry(.3, .1, 10, 10);
-                var scarf = new THREE.Mesh(scarfGeometry, phongPinkScarfMaterial);
+                scarfGeometry = new THREE.TorusGeometry(.3, .1, 10, 10);
+                scarf = new THREE.Mesh(scarfGeometry, phongPinkScarfMaterial);
                 scarf.rotation.x += Math.PI / 2;
                 scarf.position.y += .12;
                 neckJoint.add(scarf);
 
-                var bagBodyGeometry = new THREE.SphereGeometry(.22, 4, 8);
-                var bagBody = new THREE.Mesh(bagBodyGeometry, phongBrownBagMaterial);
+                bagBodyGeometry = new THREE.SphereGeometry(.22, 4, 8);
+                bagBody = new THREE.Mesh(bagBodyGeometry, phongBrownBagMaterial);
                 bagBody.position.x -= .35;
                 neckJoint.add(bagBody);
 
-                var bagTopGeometry = new THREE.TorusGeometry(.1, .05, 4, 4);
-                var bagTop = new THREE.Mesh(bagTopGeometry, phongBrownBagMaterial);
+                bagTopGeometry = new THREE.TorusGeometry(.1, .05, 4, 4);
+                bagTop = new THREE.Mesh(bagTopGeometry, phongBrownBagMaterial);
                 bagTop.rotation.x += Math.PI / 2;
                 bagTop.position.x -= .4;
                 bagTop.position.y += .25;
                 neckJoint.add(bagTop);
 
-                /*var absGeometry = new THREE.BoxGeometry(.25, .2, .45);
-                var abs = new THREE.Mesh(absGeometry, grayMaterial);
-                neckJoint.add(abs);*/
-
-                var lLegJoint = new THREE.Mesh();
-                lLegJoint.position.y -= .25;
-                lLegJoint.position.z -= .15;
+                lLegJoint = new THREE.Mesh();
                 box.add(lLegJoint);
-                var lLegGeometry = new THREE.CylinderGeometry(.15, .1, .4, 10, 10);
-                var lLeg = new THREE.Mesh(lLegGeometry, phongBrownBootMaterial);
+                legGeometry = new THREE.CylinderGeometry(.15, .1, .4, 10, 10);
+                lLeg = new THREE.Mesh(legGeometry, phongBrownBootMaterial);
+                lLeg.position.y -= .25;
+                lLeg.position.z -= .15;
                 lLegJoint.add(lLeg);
                 /*lLegJoint.position.y += .2;
                 lLegJoint.position.x += .2;
                 lLegJoint.rotation.z += Math.PI / 2;*/
 
-                var rLegJoint = new THREE.Mesh();
-                rLegJoint.position.y -= .25;
-                rLegJoint.position.z += .15;
+                rLegJoint = new THREE.Mesh();
                 box.add(rLegJoint);
-                var rLegGeometry = new THREE.CylinderGeometry(.15, .1, .4, 10, 10);
-                var rLeg = new THREE.Mesh(rLegGeometry, phongBrownBootMaterial);
+                rLeg = new THREE.Mesh(legGeometry, phongBrownBootMaterial);
+                rLeg.position.y -= .25;
+                rLeg.position.z += .15;
                 rLegJoint.add(rLeg);
                 
 
-                var lArmJoint = new THREE.Mesh();
-                lArmJoint.position.y += .25;
+                lArmJoint = new THREE.Mesh();
+                lArmJoint.position.y += .35;
                 lArmJoint.position.z -= .45;
                 box.add(lArmJoint);
-                var lArmGeometry = new THREE.CylinderGeometry(.12, .1, .4, 10, 10);
-                var lArm = new THREE.Mesh(lArmGeometry, lightSkinMaterial);
+                armGeometry = new THREE.CylinderGeometry(.12, .1, .4, 10, 10);
+                lArm = new THREE.Mesh(armGeometry, lightSkinMaterial);
+                lArm.position.y -= .15;
                 lArmJoint.add(lArm);
-                
-                var lGloveGeometry = new THREE.CylinderGeometry(.12, .1, .17, 10, 10);
-                var lGlove = new THREE.Mesh(lGloveGeometry, phongBrownBootMaterial);
-                lArmJoint.add(lGlove);
-                lGlove.position.y -= .2;
 
-                
-                var rArmJoint = new THREE.Mesh();
-                rArmJoint.position.y += .25;
+                rArmJoint = new THREE.Mesh();
+                rArmJoint.position.y += .35;
                 rArmJoint.position.z += .45;
                 box.add(rArmJoint);
-                var rArmGeometry = new THREE.CylinderGeometry(.12, .1, .4, 10, 10);
-                var rArm = new THREE.Mesh(rArmGeometry, lightSkinMaterial);
+                rArm = new THREE.Mesh(armGeometry, lightSkinMaterial);
+                rArm.position.y -= .15;
                 rArmJoint.add(rArm);
+                
+                gloveGeometry = new THREE.CylinderGeometry(.12, .1, .17, 10, 10);
+                lGlove = new THREE.Mesh(gloveGeometry, phongBrownBootMaterial);
+                lArmJoint.add(lGlove);
+                lGlove.position.y -= .3;
 
-                var rGloveGeometry = new THREE.CylinderGeometry(.12, .1, .17, 10, 10);
-                var rGlove = new THREE.Mesh(rGloveGeometry, phongBrownBootMaterial);
+                rGlove = new THREE.Mesh(gloveGeometry, phongBrownBootMaterial);
                 rArmJoint.add(rGlove);
-                rGlove.position.y -= .2;
+                rGlove.position.y -= .3;
+
+                lLegPos = 0;
+                lLegDir = 1;
+            }
+
+            var lLegPos = 0;
+            var lLegDir = 1;
+            var lArmPos = 0;
+            var lArmDir = 0;
+            var randomCycle = 0;
+            var headRotation = 0;
+            var headRotateDir = 0;
+            var headLift = 0;
+            var tiltDuration = 0;
+            var facing = Math.PI;
+            var stillTurning = false;
+
+            this.turn = function (dir) {
+                console.log(turnDir + " " + facing);
+                if (turnDir === 'right' && facing < Math.PI) {
+                    box.rotation.y += Math.PI / 10;
+                    facing += Math.PI / 10;
+                    stillTurning = true;
+                }
+                else if (turnDir === 'left' && facing > 0) {
+                    box.rotation.y -= Math.PI / 10;
+                    facing -= Math.PI / 10;
+                    stillTurning = true;
+                }
+                else {
+                    stillTurning = false;
+                }
+            }
+
+            this.walk = function (speed) {
+                switch (speed) {
+                    case 'rest':
+                        box.rotation.z = 0;
+                        tiltDuration = 0;
+                        restDuration++;
+                        if (lLegPos > -Math.PI / 20 && lLegPos < Math.PI / 20) {
+
+                        }
+                        else if (lLegPos > 0) {
+                            lLegJoint.rotation.z -= Math.PI / 20;
+                            rLegJoint.rotation.z += Math.PI / 20;
+                            lArmJoint.rotation.z += Math.PI / 40;
+                            rArmJoint.rotation.z -= Math.PI / 40;
+                            box.rotation.y += .03;
+                            lLegPos -= Math.PI / 20;
+
+                        }
+                        else {
+                            lLegJoint.rotation.z += Math.PI / 20;
+                            rLegJoint.rotation.z -= Math.PI / 20;
+                            lArmJoint.rotation.z -= Math.PI / 40;
+                            rArmJoint.rotation.z += Math.PI / 40;
+                            box.rotation.y -= .03;
+                            lLegPos += Math.PI / 20;
+                        }
+
+                        if (restDuration < 5) {
+                            headRotateDir = Math.floor(Math.random() * 2);
+                        }
+
+                        if (restDuration > 50) {
+                            if (headRotateDir === 0) {
+                                topJoint.rotation.y += .007;
+                                neckJoint.rotation.y += .004;
+                                headRotation += .05;
+
+                                if (headRotation > 4) {
+                                    headRotateDir = 1;
+                                }
+                            }
+                            else {
+                                topJoint.rotation.y -= .007;
+                                neckJoint.rotation.y -= .004;
+                                headRotation -= .05;
+
+                                if (headRotation < -4) {
+                                    headRotateDir = 0;
+                                }
+                            }
+
+                            if (restDuration % 100 === 0) {
+                                var move = (Math.random() - .5) / 10;
+                                if (move > 0 && headLift < 1) {
+                                    topJoint.rotation.z += move;
+                                    headLift += .1;
+                                }
+                                else if (move < 0 && headLift > -1) {
+                                    topJoint.rotation.z += move;
+                                    headLift -= .1;
+                                }
+                            }
+                        }
+
+                        break;
+
+                    case 'walk':
+                        restDuration = 0;
+                        headRotation = 0;
+                        topJoint.rotation.y = 0;
+                        topJoint.rotation.z = .25;
+                        neckJoint.rotation.y = 0;
+                        headLift = 0;
+
+                        if (tiltDuration < 2) {
+                            box.rotation.z -= .005;
+                            tiltDuration += .01;
+                        }
+                        if (tiltDuration < 4) {
+                            box.rotation.z -= .01;
+                            tiltDuration += .1;
+                        }
+
+                        if (inAir) {
+                            //break;
+                        }
+
+                        if (lLegDir === 0) {
+                            // Move right leg forward, left leg backward, rotate box towards
+                            lLegJoint.rotation.z += Math.PI / 20;
+                            rLegJoint.rotation.z -= Math.PI / 20;
+                            lArmJoint.rotation.z -= Math.PI / 40;
+                            rArmJoint.rotation.z += Math.PI / 40;
+                            box.rotation.y -= .03;
+
+                            lLegPos += Math.PI / 20;
+                            if (lLegPos > Math.PI / 2) {
+                                lLegDir = 1;
+                            }
+                        }
+                        else {
+                            // Move right leg backward, left leg forward,rotate box away
+                            lLegJoint.rotation.z -= Math.PI / 20;
+                            rLegJoint.rotation.z += Math.PI / 20;
+                            lArmJoint.rotation.z += Math.PI / 40;
+                            rArmJoint.rotation.z -= Math.PI / 40;
+                            box.rotation.y += .03;
+
+                            lLegPos -= Math.PI / 20;
+                            if (lLegPos < -Math.PI / 2) {
+                                lLegDir = 0;
+                            }
+                        }
+                        break;
+                }
             }
         }
         myScene1.prototype = new SimpleScene;
