@@ -755,15 +755,15 @@ Final Project
                                 case 12:
                                     var imageTexture = THREE.ImageUtils.loadTexture('images/redbrick1.jpg');
                                     var imageMaterial = new THREE.MeshBasicMaterial({ map: imageTexture });
-                                    for (var k = 0; k < 2; k++) {
+                                    for (var k = 0; k < 4; k++) {
                                         var newLevelBlock = new THREE.Mesh(geometry, imageMaterial);
                                         newLevelBlock.position.y = i;
                                         newLevelBlock.position.x = j;
-                                        newLevelBlock.position.z = 3 - k;
+                                        newLevelBlock.position.z = 4 - k;
                                         scene.add(newLevelBlock);
                                     }
                                     break;
-                                case 2:
+                                /*case 2:
                                     var imageTexture = THREE.ImageUtils.loadTexture('images/redbrick2.jpg');
                                     var imageMaterial = new THREE.MeshBasicMaterial({ map: imageTexture });
                                     var newLevelBlock = new THREE.Mesh(geometry, imageMaterial);
@@ -771,7 +771,7 @@ Final Project
                                     newLevelBlock.position.x = j;
                                     newLevelBlock.position.z = 2;
                                     scene.add(newLevelBlock);
-                                    break;
+                                    break;*/
                                 default:
                                     for (var k = 0; k < 4; k++) {
                                         var newLevelBlock = new THREE.Mesh(geometry, greenMaterial);
