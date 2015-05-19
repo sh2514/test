@@ -811,12 +811,12 @@ Final Project
 
                         // Change background
                         this.scene.remove(backgroundImage);
-                        var backgroundGeometry = new THREE.PlaneGeometry(40, 40);
+                        var backgroundGeometry = new THREE.PlaneGeometry(50, 50);
                         var imageTexture = THREE.ImageUtils.loadTexture('images/cloud.jpg');
                         var imageMaterial = new THREE.MeshBasicMaterial({ map: imageTexture });
                         var blueMaterial = new THREE.LineBasicMaterial({ color: 0x00c0ff });
                         backgroundImage = new THREE.Mesh(backgroundGeometry, imageMaterial);
-                        backgroundImage.position.z -= 7;
+                        backgroundImage.position.z -= 10;
                         this.scene.add(backgroundImage);
 
                         // Add level joint
