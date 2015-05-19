@@ -735,12 +735,13 @@ Final Project
             this.generateMap = function (scene, level, materials) {
                 var geometry = new THREE.BoxGeometry(1, 1, 1);
                 var greenMaterial = new THREE.LineBasicMaterial({ color: 0x00ffc0 });
-                
+                var blueMaterial = new THREE.LineBasicMaterial({ color: 0x00c0ff });
+
                 for (var i = 0; i < level.length; i++) {
                     for (var j = 0; j < level[i].length; j++) {
-                        if (level[i][j] > 10) {
-                            switch (level[i][j]) {
-                                case 11:
+                        if (level[i][j] > 0) {
+                            switch (parseInt(level[i][j])) {
+                                /*case 11:
                                     var imageTexture = THREE.ImageUtils.loadTexture('images/wood1.jpg');
                                     var imageMaterial = new THREE.MeshBasicMaterial({ map: imageTexture });
                                     for (var k = 0; k < 7; k++) {
@@ -761,14 +762,15 @@ Final Project
                                         newLevelBlock.position.z = 4 - k;
                                         scene.add(newLevelBlock);
                                     }
-                                    break;
-                                case 02:
+                                    break;*/
+                                case 2:
                                     var imageTexture = THREE.ImageUtils.loadTexture('images/redbrick2.jpg');
                                     var imageMaterial = new THREE.MeshBasicMaterial({ map: imageTexture });
-                                        var newLevelBlock = new THREE.Mesh(geometry, imageMaterial);
-                                        newLevelBlock.position.y = i;
-                                        newLevelBlock.position.x = j;
-                                        newLevelBlock.position.z = 4;
+                                    var newLevelBlock = new THREE.Mesh(geometry, imageMaterial);
+                                    newLevelBlock.position.y = i;
+                                    newLevelBlock.position.x = j;
+                                    newLevelBlock.position.z = 0;
+                                    scene.add(newLevelBlock);
                                     break;
                                 default:
                                     for (var k = 0; k < 4; k++) {
