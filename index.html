@@ -406,6 +406,7 @@ Final Project
 
         function myScene1() {
             var environment;
+            var backgroundImage;
             var light;
             var joint;
             var floor;
@@ -802,23 +803,39 @@ Final Project
                     case 3:
                     case 4:
                     case 5:
+                        // Remove old light, then add new light to scene
                         this.scene.remove(light);
                         light = new THREE.DirectionalLight(0xffffff);
                         light.position.set(1, 1, 1).normalize();
                         this.scene.add(light);
 
+                        // Change background
+                        this.scene.remove(backgroundImage);
+                        var backgroundGeometry = new THREE.PlaneGeometry(40, 40);
+                        //var imageTexture = THREE.ImageUtils.loadTexture('images/cloud.jpg');
+                        //var imageMaterial = new THREE.MeshBasicMaterial({ map: imageTexture });
+                        var blueMaterial = new THREE.LineBasicMaterial({ color: 0x00c0ff });
+                        backgroundImage = new THREE.Mesh(backgroundGeometry, blueMaterial);
+                        backgroundImage.position.z -= 7;
+                        this.scene.add(backgroundImage);
+
+                        // Add level joint
                         environment = new THREE.Mesh(new THREE.Geometry());
-                        this.scene.add(environment);
+                        this.scene.add(environment);                        
 
+
+                        // Load character
                         this.loadCharacter();
-
                         environment.add(box);
                         
+                        
+                        // Generate level and set camera
                         this.generateMap(environment, levels[currentLevel]);
                         environment.position.x = cameraPos[currentLevel][0];
                         environment.position.y = cameraPos[currentLevel][1];
                         break;
                 }
+                // Reset key variables
                 dead = false;
                 loadLevel = false;
                 lastLoaded = time;
