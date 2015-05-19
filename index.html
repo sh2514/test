@@ -755,11 +755,11 @@ Final Project
                                 case 12:
                                     var imageTexture = THREE.ImageUtils.loadTexture('images/redbrick1.jpg');
                                     var imageMaterial = new THREE.MeshBasicMaterial({ map: imageTexture });
-                                    for (var k = 0; k < 4; k++) {
+                                    for (var k = 0; k < 2; k++) {
                                         var newLevelBlock = new THREE.Mesh(geometry, imageMaterial);
                                         newLevelBlock.position.y = i;
                                         newLevelBlock.position.x = j;
-                                        newLevelBlock.position.z = 4 - k;
+                                        newLevelBlock.position.z = 3 - k;
                                         scene.add(newLevelBlock);
                                     }
                                     break;
