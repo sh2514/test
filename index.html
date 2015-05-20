@@ -198,7 +198,7 @@ Final Project
         ]
 
         var levelTime = [
-            [999],
+            [0],
             [60],
             [120],
             [120],
@@ -1042,7 +1042,7 @@ Final Project
                         var imageTexture = THREE.ImageUtils.loadTexture('images/title.jpg');
                         var imageMaterial = new THREE.MeshBasicMaterial({ map: imageTexture });
                         backgroundImage = new THREE.Mesh(backgroundGeometry, imageMaterial);
-                        backgroundImage.position.z -= 10;
+                        backgroundImage.position.z -= 20;
                         this.scene.add(backgroundImage);
                         break;
                     case 1:
