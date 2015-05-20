@@ -629,7 +629,7 @@ Final Project
                 }
 
                 if ((deadLevel[currentLevel] > box.position.y && deadLevel[currentLevel] - 1 < box.position.y)
-                    || Math.floor(timer - time) === 0) {
+                    || (currentLevel !== 0 && Math.floor(timer - time) === 0)) {
                     dead = true;
                     lives--;
                     timer = -1;
