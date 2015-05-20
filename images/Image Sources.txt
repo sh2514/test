@@ -24,3 +24,7 @@ http://gamedesignplanet.com/members/free_archive/JPG/Factory_Bricks.jpg
 
 whitebrick1
 http://bgfons.com/upload/brick_texture120.jpg
+
+brownbrick1
+http://www.materials-world.com/bricks/belden/brown/images/SealBrownVelourBR.jpg
+

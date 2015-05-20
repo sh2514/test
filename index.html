@@ -332,9 +332,9 @@ Final Project
             [00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00],
             [00, 11, 11, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00],
             [00, 11, 11, 11, 00, 00, 00, 00, 11, 00, 00, 11, 00, 00, 00, 00, 11, 00, 00, 00, 00, 11, 00, 00, 00, 00, 00, 00, 11, 00, 00, 00, 11, 00, 00, 00, 00, 00, 00, 11, 00, 00, 00, 00, 00],
-            [00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 11],
-            [00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 11, 11],
-            [00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00],
+            [00, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 09, 11],
+            [00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 09, 11, 11],
+            [00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 09, 09],
             [00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00],
             [00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00],
             [00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00],
@@ -737,7 +737,7 @@ Final Project
                     for (var j = 0; j < level[i].length; j++) {
                         if (level[i][j] > 0) {
                             switch (parseInt(level[i][j])) {
-                                case 11:
+                                case 11:    // 7x Wood block
                                     var imageTexture = THREE.ImageUtils.loadTexture('images/wood1.jpg');
                                     var imageMaterial = new THREE.MeshBasicMaterial({ map: imageTexture });
                                     for (var k = 0; k < 7; k++) {
@@ -850,6 +850,19 @@ Final Project
                                         scene.add(newLevelBlock);
                                     }
                                     break;
+                                case 9:   // Border wood block 7 width
+                                    var imageTexture = THREE.ImageUtils.loadTexture('images/wood1.jpg');
+                                    var imageMaterial = new THREE.MeshBasicMaterial({ map: imageTexture });
+                                    for (var k = 0; k < 7; k++) {
+                                        if (k === 0 || k === 7) {
+                                            var newLevelBlock = new THREE.Mesh(geometry, imageMaterial);
+                                            newLevelBlock.position.y = i;
+                                            newLevelBlock.position.x = j;
+                                            newLevelBlock.position.z = 4 - k;
+                                            scene.add(newLevelBlock);
+                                        }   
+                                    }
+                                    break;
                                 default:
                                     for (var k = 0; k < 4; k++) {
                                         var newLevelBlock = new THREE.Mesh(geometry, greenMaterial);
@@ -923,7 +936,21 @@ Final Project
                         this.scene.add(backgroundImage);
                         break;
                     case 4:
+                        this.scene.remove(backgroundImage);
+                        var backgroundGeometry = new THREE.PlaneGeometry(50, 50);
+                        var imageTexture = THREE.ImageUtils.loadTexture('images/cloud.jpg');
+                        var imageMaterial = new THREE.MeshBasicMaterial({ map: imageTexture });
+                        backgroundImage = new THREE.Mesh(backgroundGeometry, imageMaterial);
+                        backgroundImage.position.z -= 10;
+                        this.scene.add(backgroundImage);
                     case 5:
+                        this.scene.remove(backgroundImage);
+                        var backgroundGeometry = new THREE.PlaneGeometry(50, 50);
+                        var imageTexture = THREE.ImageUtils.loadTexture('images/seaofhero.jpg');
+                        var imageMaterial = new THREE.MeshBasicMaterial({ map: imageTexture });
+                        backgroundImage = new THREE.Mesh(backgroundGeometry, imageMaterial);
+                        backgroundImage.position.z -= 10;
+                        this.scene.add(backgroundImage);
                         /*// Change background
                         this.scene.remove(backgroundImage);
                         var backgroundGeometry = new THREE.PlaneGeometry(50, 50);
