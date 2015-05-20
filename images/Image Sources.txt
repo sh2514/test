@@ -18,3 +18,9 @@ http://mario.wikia.com/wiki/File:Question_Block_Art_-_New_Super_Mario_Bros.png
 
 mariobackground
 http://fantendo.wikia.com/wiki/File:Grass_BG.png
+
+graybrick1
+http://gamedesignplanet.com/members/free_archive/JPG/Factory_Bricks.jpg
+
+whitebrick1
+http://bgfons.com/upload/brick_texture120.jpg
