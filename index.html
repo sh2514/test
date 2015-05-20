@@ -737,6 +737,8 @@ Final Project
                     for (var j = 0; j < level[i].length; j++) {
                         if (level[i][j] > 0) {
                             switch (parseInt(level[i][j])) {
+                                case 99:    // Empty impassable block
+                                    break;
                                 case 11:    // 7x Wood block
                                     var imageTexture = THREE.ImageUtils.loadTexture('images/wood1.jpg');
                                     var imageMaterial = new THREE.MeshBasicMaterial({ map: imageTexture });
