@@ -56,12 +56,18 @@ Final Project
     <table>
         <tr>
             <td id="myScene1_id"></td>
-            <td>Click and hold to play music.</td>
+            <td>
+                <ul>
+                    <li>WASD to move.</li>
+                    <li>Hold left or right to run and accelerate to jump higher and further.</li>
+                </ul>
+            </td>
         </tr>
     </table>
 
     <script>
         var bgm;
+        var soundJump;
         var graphic = document.getElementById("myScene1_id");
         var screenW = 1050;
         var screenH = 700;
@@ -158,12 +164,12 @@ Final Project
         ]
         
         var levelMusic = [
-            ['gb1.mp3'],
-            ['gb1.mp3'],
-            ['gb2.mp3'],
-            ['gb2.mp3'],
-            ['gb6.mp3'],
-            ['gb6.mp3'],
+            ['sounds/mario.mp3'],
+            ['sounds/mario.mp3'],
+            ['sounds/gb1.mp3'],
+            ['sounds/gb2.mp3'],
+            ['sounds/gb4.mp3'],
+            ['sounds/gb6.mp3'],
         ]
 
         var deadLevel = [
@@ -408,7 +414,9 @@ Final Project
             var floorMaterials = [];     
 
             this.setup = function () {
-                //testaudio.play();
+                soundJump = new Audio('sounds/jump.wav');
+                soundJump.load();
+
                 document.addEventListener('keydown', onKeyDown, false);
                 document.addEventListener('keyup', onKeyUp, false);
 
@@ -683,6 +691,7 @@ Final Project
                     prevDir = 'right';
                 }
                 if (up && !jump && canJump && jumpReleased) {
+                    soundJump.play();
                     jumpReleased = false;
                     jump = true;
                     jumpStart = time;
@@ -954,6 +963,7 @@ Final Project
                         backgroundImage = new THREE.Mesh(backgroundGeometry, imageMaterial);
                         backgroundImage.position.z -= 10;
                         this.scene.add(backgroundImage);
+
                         /*// Change background
                         this.scene.remove(backgroundImage);
                         var backgroundGeometry = new THREE.PlaneGeometry(50, 50);
